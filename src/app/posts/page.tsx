@@ -6,7 +6,6 @@ import useFetch from '../../app/hooks/useFetch'
 import Card from '../../app/components/Card'
 import Link from 'next/link'
 
-// ✅ Create or import a proper spinner component
 function LoadingSpinner() {
   return (
     <div className="flex justify-center items-center py-10">
@@ -24,18 +23,30 @@ interface Post {
 
 export default function PostsPage() {
   const [showError, setShowError] = useState(false)
+  const [currentPage, setCurrentPage] = useState(1)
+  const postsPerPage = 9
+  
   const { data: posts, loading, error, refetch } = useFetch<Post[]>(
     showError
-      ? 'https://jsonplaceholder.typicode.com/invalid-posts' // will trigger error
-      : 'https://jsonplaceholder.typicode.com/posts' // correct endpoint
+      ? 'https://jsonplaceholder.typicode.com/invalid-posts'
+      : 'https://jsonplaceholder.typicode.com/posts'
   )
+
+  // Calculate pagination
+  const totalPosts = posts?.length || 0
+  const totalPages = Math.ceil(totalPosts / postsPerPage)
+  const startIndex = (currentPage - 1) * postsPerPage
+  const currentPosts = posts?.slice(startIndex, startIndex + postsPerPage) || []
 
   return (
     <div>
       <div className="flex justify-between items-center mb-6">
-        <h1 className="text-3xl font-bold text-gray-800">Posts</h1>
+        <h1 className="text-3xl font-bold text-gray-800">Posts ({totalPosts})</h1>
         <button
-          onClick={() => setShowError(!showError)}
+          onClick={() => {
+            setShowError(!showError)
+            setCurrentPage(1)
+          }}
           className="bg-red-500 hover:bg-red-600 text-white px-4 py-2 rounded-lg transition-colors"
         >
           {showError ? 'Load Correct Data' : 'Simulate Error'}
@@ -52,7 +63,10 @@ export default function PostsPage() {
         >
           <p>Error: {error}</p>
           <button
-            onClick={refetch}
+            onClick={() => {
+              refetch()
+              setCurrentPage(1)
+            }}
             className="mt-2 bg-red-600 hover:bg-red-700 text-white px-3 py-1 rounded text-sm"
           >
             Retry
@@ -61,38 +75,65 @@ export default function PostsPage() {
       )}
 
       {!loading && !error && posts && (
-        <motion.div
-          className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6"
-          initial="hidden"
-          animate="visible"
-          variants={{
-            hidden: { opacity: 0 },
-            visible: {
-              opacity: 1,
-              transition: {
-                staggerChildren: 0.1,
+        <>
+          <motion.div
+            className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8"
+            initial="hidden"
+            animate="visible"
+            variants={{
+              hidden: { opacity: 0 },
+              visible: {
+                opacity: 1,
+                transition: {
+                  staggerChildren: 0.1,
+                },
               },
-            },
-          }}
-        >
-          {posts.slice(0, 9).map((post) => (
-            <motion.div
-              key={post.id}
-              variants={{
-                hidden: { opacity: 0, y: 20 },
-                visible: { opacity: 1, y: 0 },
-              }}
-              transition={{ duration: 0.5 }}
-            >
-              <Link href={`/posts/${post.id}`}>
-                <Card
-                  title={post.title}
-                  content={post.body.substring(0, 100) + '...'}
-                />
-              </Link>
-            </motion.div>
-          ))}
-        </motion.div>
+            }}
+          >
+            {currentPosts.map((post) => (
+              <motion.div
+                key={post.id}
+                variants={{
+                  hidden: { opacity: 0, y: 20 },
+                  visible: { opacity: 1, y: 0 },
+                }}
+                transition={{ duration: 0.5 }}
+              >
+                <Link href={`/posts/${post.id}`}>
+                  <Card
+                    title={post.title}
+                    content={post.body.substring(0, 100) + '...'}
+                  />
+                </Link>
+              </motion.div>
+            ))}
+          </motion.div>
+
+          {/* Pagination Controls */}
+          {totalPages > 1 && (
+            <div className="flex justify-center items-center space-x-2">
+              <button
+                onClick={() => setCurrentPage(prev => Math.max(prev - 1, 1))}
+                disabled={currentPage === 1}
+                className="px-3 py-1 rounded border disabled:opacity-50"
+              >
+                Previous
+              </button>
+              
+              <span className="text-gray-600">
+                Page {currentPage} of {totalPages}
+              </span>
+              
+              <button
+                onClick={() => setCurrentPage(prev => Math.min(prev + 1, totalPages))}
+                disabled={currentPage === totalPages}
+                className="px-3 py-1 rounded border disabled:opacity-50"
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </>
       )}
     </div>
   )
