@@ -6,6 +6,7 @@ import { useState, useEffect } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
 import { TooltipProps } from 'recharts'
 
+
 export default function Home() {
   const [userCount, setUserCount] = useState(0)
   const [postCount, setPostCount] = useState(0)
@@ -15,7 +16,13 @@ export default function Home() {
   const [chartData, setChartData] = useState<{ name: string; count: number }[]>([])
   const [userPostsData, setUserPostsData] = useState<{ name: string; value: number }[]>([])
   const [modalOpen, setModalOpen] = useState(false)
-  const [modalContent, setModalContent] = useState({ title: '', data: [] })
+  type ModalContent =
+    | { title: 'All Users'; data: Array<{ id: number; name: string; email: string; company?: { name: string } }> }
+    | { title: 'All Posts'; data: Array<{ id: number; title: string; body: string }> }
+    | { title: 'Engagement Statistics'; data: Array<{ metric: string; value: string }> }
+    | { title: string; data: unknown[] }
+
+  const [modalContent, setModalContent] = useState<ModalContent>({ title: '', data: [] })
 
   useEffect(() => {
     // Fetch data from APIs
@@ -103,17 +110,17 @@ export default function Home() {
     setModalOpen(false)
   }
   // Custom tooltip for the chart
-  const CustomTooltip = ({ active, payload, label }: TooltipProps<any, any>) => {
-    if (active && payload && payload.length) {
-      return (
-        <div className="bg-white p-3 border border-gray-200 rounded shadow-md">
-          <p className="font-medium text-gray-800">{`${label}`}</p>
-          <p className="text-blue-600">{`Count: ${payload[0].value}`}</p>
-        </div>
-      )
-    }
-    return null
+const CustomTooltip = ({ active }: TooltipProps<number, string>) => {
+  if (active ) {
+    return (
+      <div className="bg-white p-3 border border-gray-200 rounded shadow-md">
+        {/* <p className="font-medium text-gray-800">{`${label}`}</p> */}
+        {/* <p className="text-blue-600">{`Count: ${payload[0]?.value}`}</p> */}
+      </div>
+    )
   }
+  return null
+}
 
   // Colors for the pie chart
   const COLORS = ['#0088FE', '#00C49F', '#FFBB28', '#FF8042', '#8884D8'];
@@ -231,7 +238,9 @@ export default function Home() {
                     cx="50%"
                     cy="50%"
                     labelLine={false}
-                    label={({ name, percent }) => `${name}: ${(percent * 100).toFixed(0)}%`}
+                    label={({ name, percent }) => {
+                      return `${name}: ${((percent as number) * 100).toFixed(0)}%`
+                    }}
                     outerRadius={80}
                     fill="#8884d8"
                     dataKey="value"
@@ -279,35 +288,44 @@ export default function Home() {
               <div className="max-h-[60vh] overflow-y-auto">
                 {modalContent.title === 'All Users' && (
                   <ul className="divide-y divide-gray-200">
-                    {modalContent.data.map(user => (
-                      <li key={user.id} className="py-3">
-                        <h3 className="font-medium text-gray-800">{user.name}</h3>
-                        <p className="text-sm text-gray-600">{user.email}</p>
-                        <p className="text-sm text-gray-500">{user.company?.name}</p>
-                      </li>
-                    ))}
+                    {modalContent.data.map((user) => {
+                      const typedUser = user as { id: number; name: string; email: string; company?: { name: string } }
+                      return (
+                        <li key={typedUser.id} className="py-3">
+                          <h3 className="font-medium text-gray-800">{typedUser.name}</h3>
+                          <p className="text-sm text-gray-600">{typedUser.email}</p>
+                          <p className="text-sm text-gray-500">{typedUser.company?.name}</p>
+                        </li>
+                      )
+                    })}
                   </ul>
                 )}
                 
                 {modalContent.title === 'All Posts' && (
                   <ul className="divide-y divide-gray-200">
-                    {modalContent.data.map(post => (
-                      <li key={post.id} className="py-3">
-                        <h3 className="font-medium text-gray-800">{post.title}</h3>
-                        <p className="text-sm text-gray-600">{post.body}</p>
-                      </li>
-                    ))}
+                    {modalContent.data.map(post => {
+                      const typedPost = post as { id: number; title: string; body: string }
+                      return (
+                        <li key={typedPost.id} className="py-3">
+                          <h3 className="font-medium text-gray-800">{typedPost.title}</h3>
+                          <p className="text-sm text-gray-600">{typedPost.body}</p>
+                        </li>
+                      )
+                    })}
                   </ul>
                 )}
                 
                 {modalContent.title === 'Engagement Statistics' && (
                   <ul className="divide-y divide-gray-200">
-                    {modalContent.data.map((item, index) => (
-                      <li key={index} className="py-3 flex justify-between">
-                        <span className="font-medium text-gray-800">{item.metric}:</span>
-                        <span className="text-blue-600">{item.value}</span>
-                      </li>
-                    ))}
+                    {modalContent.data.map((item, index) => {
+                      const stat = item as { metric: string; value: string }
+                      return (
+                        <li key={index} className="py-3 flex justify-between">
+                          <span className="font-medium text-gray-800">{stat.metric}:</span>
+                          <span className="text-blue-600">{stat.value}</span>
+                        </li>
+                      )
+                    })}
                   </ul>
                 )}
               </div>
