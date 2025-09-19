@@ -11,7 +11,7 @@ export default function Home() {
   const [users, setUsers] = useState([])
   const [posts, setPosts] = useState([])
   const [loading, setLoading] = useState(true)
-  const [chartData, setChartData] = useState([])
+  const [chartData, setChartData] = useState<{ name: string; count: number }[]>([])
   const [userPostsData, setUserPostsData] = useState([])
   const [modalOpen, setModalOpen] = useState(false)
   const [modalContent, setModalContent] = useState({ title: '', data: [] })
