@@ -110,12 +110,12 @@ export default function Home() {
     setModalOpen(false)
   }
   // Custom tooltip for the chart
-const CustomTooltip = ({ active }: TooltipProps<number, string>) => {
+const CustomTooltip = ({ active,payload,label }: TooltipProps<number, string>) => {
   if (active ) {
     return (
       <div className="bg-white p-3 border border-gray-200 rounded shadow-md">
-        {/* <p className="font-medium text-gray-800">{`${label}`}</p> */}
-        {/* <p className="text-blue-600">{`Count: ${payload[0]?.value}`}</p> */}
+        <p className="font-medium text-gray-800">{`${label}`}</p>
+        <p className="text-blue-600">{`Count: ${payload[0]?.value}`}</p>
       </div>
     )
   }
