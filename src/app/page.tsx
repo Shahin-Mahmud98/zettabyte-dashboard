@@ -4,6 +4,7 @@ import { motion } from 'framer-motion'
 import Card from '../../src/app/components/Card'
 import { useState, useEffect } from 'react'
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer, PieChart, Pie, Cell } from 'recharts'
+import { TooltipProps } from 'recharts'
 
 export default function Home() {
   const [userCount, setUserCount] = useState(0)
@@ -12,7 +13,7 @@ export default function Home() {
   const [posts, setPosts] = useState([])
   const [loading, setLoading] = useState(true)
   const [chartData, setChartData] = useState<{ name: string; count: number }[]>([])
-  const [userPostsData, setUserPostsData] = useState([])
+  const [userPostsData, setUserPostsData] = useState<{ name: string; value: number }[]>([])
   const [modalOpen, setModalOpen] = useState(false)
   const [modalContent, setModalContent] = useState({ title: '', data: [] })
 
@@ -42,8 +43,8 @@ export default function Home() {
         setChartData(data)
 
         // Count posts per user
-        const postsPerUser = {};
-        postsData.forEach(post => {
+        const postsPerUser: Record<number, number> = {};
+        postsData.forEach((post: { userId: number }) => {
           if (postsPerUser[post.userId]) {
             postsPerUser[post.userId] += 1;
           } else {
@@ -72,7 +73,7 @@ export default function Home() {
   }, [])
 
   // Handle card clicks
-  const handleCardClick = (type) => {
+  const handleCardClick = (type: 'users' | 'posts' | 'engagement') => {
     if (type === 'users') {
       setModalContent({
         title: 'All Users',
@@ -101,9 +102,8 @@ export default function Home() {
   const closeModal = () => {
     setModalOpen(false)
   }
-
   // Custom tooltip for the chart
-  const CustomTooltip = ({ active, payload, label }) => {
+  const CustomTooltip = ({ active, payload, label }: TooltipProps<any, any>) => {
     if (active && payload && payload.length) {
       return (
         <div className="bg-white p-3 border border-gray-200 rounded shadow-md">
